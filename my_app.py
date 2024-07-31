@@ -3,6 +3,7 @@ from functionalities import *
 from sqlalchemy import create_engine
 from models import *
 from Config import config
+from sqlalchemy.dialects.mysql import insert
 
 app = Flask(__name__)
 
@@ -42,7 +43,6 @@ def upload_prices():
     ticker = request.args["ticker"]
     prices_data = get_prices(ticker)
     with Session(engine) as session:
-        prices_lst = []
         for price in prices_data:
             entry = HistModel(date=price["Date"], close=price["Close"], ticker=ticker.upper())
             existing_entry = session.query(HistModel).filter_by(date=price["Date"], ticker=ticker.upper()).first()
@@ -50,9 +50,8 @@ def upload_prices():
                 existing_entry.close = price["Close"]
             else:
                 session.add(entry)
-        session.add_all(prices_lst)
         session.commit()
-    #upload_via_pandas(ticker, engine)
+    #    upload_via_pandas(ticker, engine)
     return {"status": "OK"}, 200
 
 
